@@ -1,16 +1,33 @@
-# This is a sample Python script.
+import os
+from fastapi import FastAPI
+from pydantic import BaseModel
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+load_dotenv()
+openai_api_key=os.getenv("OPENAI_API_KEY")
+llm=ChatOpenAI(model="gpt-3.5-turbo",
+               openai_api_key=openai_api_key
+                )
+from langchain_core.messages import SystemMessage,HumanMessage
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+
+class request_data(BaseModel):
+    message:str
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+app=FastAPI()
 
+@app.post("/chat")
+def chat(Request:request_data):
+    query=Request.message
+    messages = [
+        SystemMessage(content="Translate the following from English into Italian"),
+        HumanMessage(content=query),
+    ]
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+    response=llm.invoke(messages)
+    return response
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ =="__main__":
+    import uvicorn
+    uvicorn.run(app)
